@@ -1,6 +1,26 @@
 import type { Metadata } from "next";
+import { DM_Sans, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/components/providers/convex-client-provider";
+import { cn } from "@/lib/utils";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Atlas",
@@ -14,7 +34,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body
+        className={cn(
+          dmSans.variable,
+          spaceGrotesk.variable,
+          jetBrainsMono.variable,
+        )}
+      >
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
