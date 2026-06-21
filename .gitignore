@@ -1,0 +1,10 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+.next/
+.turbo/
+node_modules/
+dist/
+coverage/
+convex/_generated/
