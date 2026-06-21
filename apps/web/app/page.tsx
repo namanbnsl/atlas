@@ -91,19 +91,21 @@ type IconCardProps = {
 
 function AtlasWordmark({ light = false }: { light?: boolean }) {
   return (
-    <div className="flex items-center gap-3" aria-label="Atlas">
-      <Image
-        src="/atlas-logo-minimal-mark.png"
-        alt="Atlas logo"
-        width={746}
-        height={746}
-        className="h-9 w-9 object-contain"
-        priority
-      />
+    <div className="group flex items-center gap-3" aria-label="Atlas">
+      <div className="flex h-10 w-10 items-center justify-center border border-[#f0b45f] bg-[#fffaf2] shadow-[3px_3px_0_#d9672e] transition-all duration-200 group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 group-hover:shadow-[4px_4px_0_#d9672e]">
+        <Image
+          src="/atlas-logo-minimal-mark.png"
+          alt="Atlas logo"
+          width={796}
+          height={796}
+          className="h-8 w-8 object-contain"
+          priority
+        />
+      </div>
       <span
         className={cn(
-          "font-display text-[19px] font-semibold leading-none tracking-[0.08em]",
-          light ? "text-[#fff7eb]" : "text-[#201915]",
+          "font-display text-[19px] font-semibold leading-none tracking-[0.08em] transition-colors duration-200",
+          light ? "text-[#fff7eb] group-hover:text-white" : "text-[#201915] ",
         )}
       >
         Atlas
@@ -451,15 +453,17 @@ export default function LandingPage() {
           Atlas.
         </div>
         <div className="relative z-10 flex h-full items-center justify-center">
-          <div className="flex h-36 w-36 items-center justify-center border border-[#f0b45f] bg-[#fffaf2] shadow-[10px_10px_0_#d9672e] sm:h-44 sm:w-44">
-            <Image
-              src="/atlas-logo-minimal-mark.png"
-              alt="Atlas logo"
-              width={746}
-              height={746}
-              className="h-24 w-24 object-contain sm:h-28 sm:w-28"
-            />
-          </div>
+          <Link href="/" className="group">
+            <div className="flex h-36 w-36 items-center justify-center border border-[#f0b45f] bg-[#fffaf2] shadow-[10px_10px_0_#d9672e] transition-all duration-200 group-hover:-translate-x-1.5 group-hover:-translate-y-1.5 group-hover:shadow-[14px_14px_0_#d9672e] sm:h-44 sm:w-44">
+              <Image
+                src="/atlas-logo-minimal-mark.png"
+                alt="Atlas logo"
+                width={746}
+                height={746}
+                className="h-24 w-24 object-contain sm:h-28 sm:w-28"
+              />
+            </div>
+          </Link>
         </div>
       </section>
     </main>
