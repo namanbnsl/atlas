@@ -41,9 +41,9 @@ const navItems = [
 ];
 
 const habits = [
-  ["Steering", "92", "intervenes early", "bg-[#201915]"],
-  ["Planning", "84", "constraints first", "bg-[#d9672e]"],
-  ["Verification", "71", "tests arrive late", "bg-[#e7a251]"],
+  ["Steering", "92", "intervenes early", "bg-[#08251c]"],
+  ["Planning", "84", "constraints first", "bg-[#6f9f45]"],
+  ["Verification", "71", "tests arrive late", "bg-[#94b963]"],
 ];
 
 const timeline = [
@@ -55,25 +55,19 @@ const timeline = [
 
 const insightCards = [
   {
-    label: "Strongest habit",
     title: "You rescue runs early.",
     body: "Your best interventions happen before the second failed patch, when context is still cheap to steer.",
     icon: MousePointer2,
-    rotate: "lg:-rotate-1",
   },
   {
-    label: "Best workflow",
     title: "Plan, patch, verify.",
     body: "Bug-fix runs land more often when the first prompt includes constraints, expected files, and tests.",
     icon: GitBranch,
-    rotate: "lg:rotate-1",
   },
   {
-    label: "Model fit",
     title: "Different agents, different lanes.",
     body: "Atlas separates UI edits, architecture reviews, and tight patch loops so tool choice becomes concrete.",
     icon: Bot,
-    rotate: "lg:-rotate-1",
   },
 ];
 
@@ -91,21 +85,21 @@ type IconCardProps = {
 
 function AtlasWordmark({ light = false }: { light?: boolean }) {
   return (
-    <div className="group flex items-center gap-3" aria-label="Atlas">
-      <div className="flex h-10 w-10 items-center justify-center border border-[#f0b45f] bg-[#fffaf2] shadow-[3px_3px_0_#d9672e] transition-all duration-200 group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 group-hover:shadow-[4px_4px_0_#d9672e]">
+    <div className="group flex items-center gap-2.5" aria-label="Atlas">
+      <div className="flex h-12 w-12 items-center justify-center bg-transparent">
         <Image
           src="/atlas-logo-minimal-mark.png"
           alt="Atlas logo"
           width={796}
           height={796}
-          className="h-8 w-8 object-contain"
+          className="h-12 w-12 object-contain"
           priority
         />
       </div>
       <span
         className={cn(
-          "font-display text-[19px] font-semibold leading-none tracking-[0.08em] transition-colors duration-200",
-          light ? "text-[#fff7eb] group-hover:text-white" : "text-[#201915] ",
+          "font-display text-[26px] font-semibold leading-none tracking-[-0.035em] transition-colors duration-200",
+          light ? "text-[#f6f8f1] group-hover:text-white" : "text-[#08251c] ",
         )}
       >
         Atlas
@@ -116,16 +110,15 @@ function AtlasWordmark({ light = false }: { light?: boolean }) {
 
 function TextureGrid() {
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 bg-[#f7efe3]" />
+    <div className="pointer-events-none fixed inset-0 -z-10 bg-[#f6f8f1]" />
   );
 }
 
 function SectionPill({ children }: { children: React.ReactNode }) {
   return (
-    <div className="inline-flex items-center gap-3 border border-[#201915] bg-[#fffaf2] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f5849]">
-      <span className="h-2 w-2 bg-[#d9672e]" />
+    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5f8d3c]">
       {children}
-    </div>
+    </p>
   );
 }
 
@@ -141,12 +134,12 @@ function MetricBar({
   color: string;
 }) {
   return (
-    <div className="group min-w-0 border border-[#201915] bg-[#fffaf2] p-5 transition-transform duration-300 hover:-translate-y-1">
+    <div className="group min-w-0 border border-[#08251c] bg-[#fbfdf7] p-5 transition-colors duration-200">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-[#201915]">{label}</p>
-        <p className="font-code text-sm text-[#8a6048]">{value}</p>
+        <p className="text-sm font-semibold text-[#08251c]">{label}</p>
+        <p className="font-code text-sm text-[#566b5f]">{value}</p>
       </div>
-      <div className="mt-4 h-3 overflow-hidden border border-[#201915] bg-[#f0e2d3]">
+      <div className="mt-4 h-3 overflow-hidden border border-[#08251c] bg-[#d9e6ce]">
         <div
           className={cn(
             "h-full transition-[width,transform] duration-500 group-hover:translate-x-1",
@@ -155,7 +148,7 @@ function MetricBar({
           style={{ width: `${value}%` }}
         />
       </div>
-      <p className="mt-4 text-xs uppercase tracking-[0.14em] text-[#77695f]">
+      <p className="mt-4 text-xs uppercase tracking-[0.14em] text-[#6b7a70]">
         {detail}
       </p>
     </div>
@@ -166,18 +159,13 @@ function BuilderReport() {
   return (
     <Card
       id="report"
-      className="relative overflow-hidden rounded-none border-[1.5px] border-[#201915] bg-[#fffaf2]"
+      className="relative overflow-hidden rounded-lg border border-[#08251c] bg-[#fbfdf7]"
     >
-      <div className="relative border-b border-[#201915] bg-[#fff3df] px-5 py-4 sm:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 bg-[#d9672e]" />
-            <span className="h-3 w-3 bg-[#f0b45f]" />
-            <span className="h-3 w-3 bg-[#201915]" />
-          </div>
-          <div className="font-code text-[10px] uppercase tracking-[0.22em] text-[#8f6f58]">
-            private builder report
-          </div>
+      <div className="relative border-b border-[#d9e6ce] bg-[#eef4e4] px-5 py-4 sm:px-6">
+        <div className="flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#6f9f45]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#b7d77a]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#08251c]" />
         </div>
       </div>
 
@@ -186,14 +174,14 @@ function BuilderReport() {
           <div className="min-w-0 p-6 sm:p-8 lg:p-10">
             <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-start">
               <div className="min-w-0">
-                <p className="font-code text-xs uppercase tracking-[0.22em] text-[#88766b]">
+                <p className="font-code text-xs uppercase tracking-[0.22em] text-[#6b7a70]">
                   atlas.dev/naman
                 </p>
-                <h2 className="font-display mt-4 text-3xl font-semibold leading-tight tracking-normal text-[#201915] sm:text-4xl">
+                <h2 className="font-display mt-4 text-3xl font-semibold leading-tight tracking-normal text-[#08251c] sm:text-4xl">
                   Builder habits report
                 </h2>
               </div>
-              <Badge className="w-fit rounded-none border border-[#201915] bg-[#201915] px-3 py-1 text-[#fffaf2] hover:bg-[#201915]">
+              <Badge className="w-fit rounded-lg border border-[#08251c] bg-[#08251c] px-3 py-1 text-[#fbfdf7] hover:bg-[#08251c]">
                 top 4% planner
               </Badge>
             </div>
@@ -210,24 +198,24 @@ function BuilderReport() {
               ))}
             </div>
 
-            <div className="mt-8 overflow-hidden border border-[#201915] bg-white">
+            <div className="mt-8 overflow-hidden border border-[#08251c] bg-white">
               {timeline.map(([time, tool, task, result], index) => (
                 <div
                   key={task}
                   className={cn(
                     "grid grid-cols-[54px_82px_minmax(0,1fr)] items-center gap-4 px-5 py-4 text-sm sm:grid-cols-[64px_104px_minmax(0,1fr)_78px]",
                     index !== timeline.length - 1 &&
-                      "border-b border-[#f0e1cf]",
+                      "border-b border-[#d9e6ce]",
                   )}
                 >
-                  <span className="font-code text-xs text-[#9b8879]">
+                  <span className="font-code text-xs text-[#7b8a80]">
                     {time}
                   </span>
-                  <span className="font-semibold text-[#201915]">{tool}</span>
-                  <span className="min-w-0 truncate text-[#65574f]">
+                  <span className="font-semibold text-[#08251c]">{tool}</span>
+                  <span className="min-w-0 truncate text-[#4f6259]">
                     {task}
                   </span>
-                  <span className="hidden text-right text-xs font-semibold uppercase tracking-[0.12em] text-[#9f603c] sm:block">
+                  <span className="hidden text-right text-xs font-semibold uppercase tracking-[0.12em] text-[#5f8d3c] sm:block">
                     {result}
                   </span>
                 </div>
@@ -235,14 +223,11 @@ function BuilderReport() {
             </div>
           </div>
 
-          <aside className="border-t border-[#201915] bg-[#201915] p-6 text-[#fffaf2] sm:p-8 lg:border-l lg:border-t-0 lg:p-10">
-            <div className="font-code text-xs uppercase tracking-[0.22em] text-[#f0b45f]">
-              next best habit
-            </div>
-            <h3 className="font-display mt-6 text-3xl font-semibold leading-tight tracking-normal">
+          <aside className="border-t border-[#08251c] bg-[#08251c] p-6 text-[#fbfdf7] sm:p-8 lg:border-l lg:border-t-0 lg:p-10">
+            <h3 className="font-display text-3xl font-semibold leading-tight tracking-normal">
               Move verification earlier.
             </h3>
-            <p className="mt-5 text-sm leading-7 text-[#dbcbbb]">
+            <p className="mt-5 text-sm leading-7 text-[#dce9d1]">
               Refactor runs land faster when tests arrive before the second
               patch. Add that constraint to future Codex tasks.
             </p>
@@ -254,17 +239,17 @@ function BuilderReport() {
               ].map(([label, value, detail]) => (
                 <div
                   key={label}
-                  className="border border-white/20 bg-white/[0.04] p-5 transition-transform duration-300 hover:-translate-y-1"
+                  className="border border-white/20 bg-white/[0.04] p-5 transition-colors duration-200"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <p className="text-sm uppercase tracking-[0.12em] text-[#d8c8b8]">
+                    <p className="text-sm uppercase tracking-[0.12em] text-[#dce9d1]">
                       {label}
                     </p>
-                    <p className="font-display text-2xl font-semibold leading-none text-[#fffaf2]">
+                    <p className="font-display text-2xl font-semibold leading-none text-[#fbfdf7]">
                       {value}
                     </p>
                   </div>
-                  <p className="mt-2 text-xs text-[#bca997]">{detail}</p>
+                  <p className="mt-2 text-xs text-[#b7c8b0]">{detail}</p>
                 </div>
               ))}
             </div>
@@ -277,13 +262,13 @@ function BuilderReport() {
 
 function InsightCard({ icon: Icon, title, body }: IconCardProps) {
   return (
-    <Card className="group h-full rounded-none border-[#201915] bg-[#fffaf2] transition-all duration-300 hover:-translate-y-1">
+    <Card className="group h-full rounded-lg border-[#08251c] bg-[#fbfdf7] transition-colors duration-200">
       <CardHeader className="p-6">
-        <Icon className="mb-8 size-5 text-[#d9672e]" aria-hidden="true" />
-        <CardTitle className="font-display text-lg font-semibold tracking-normal text-[#201915]">
+        <Icon className="mb-8 size-5 text-[#6f9f45]" aria-hidden="true" />
+        <CardTitle className="font-display text-lg font-semibold tracking-normal text-[#08251c]">
           {title}
         </CardTitle>
-        <CardDescription className="leading-6 text-[#65574f]">
+        <CardDescription className="leading-6 text-[#4f6259]">
           {body}
         </CardDescription>
       </CardHeader>
@@ -293,10 +278,10 @@ function InsightCard({ icon: Icon, title, body }: IconCardProps) {
 
 export default function LandingPage() {
   return (
-    <main className="relative isolate min-h-screen overflow-hidden text-[#201915]">
+    <main className="relative isolate min-h-screen overflow-hidden text-[#08251c]">
       <TextureGrid />
 
-      <header className="sticky top-0 z-40 border-b border-[#ead8c2]/80 bg-[#f7efe3]/96">
+      <header className="sticky top-0 z-40 border-b border-[#d9e6ce]/80 bg-[#f6f8f1]/96">
         <nav
           className="mx-auto grid max-w-[1160px] grid-cols-[1fr_auto] items-center gap-4 px-4 py-4 sm:px-6 md:grid-cols-[1fr_auto_1fr]"
           aria-label="Main navigation"
@@ -309,7 +294,7 @@ export default function LandingPage() {
               <a
                 key={item.href}
                 href={item.href}
-                className="border-b border-transparent pb-1 text-sm font-medium tracking-normal text-[#705d51] transition-colors hover:border-[#d9672e] hover:text-[#201915]"
+                className="border-b border-transparent pb-1 text-sm font-medium tracking-normal text-[#5b6f63] transition-colors hover:border-[#6f9f45] hover:text-[#08251c]"
               >
                 {item.label}
               </a>
@@ -318,7 +303,7 @@ export default function LandingPage() {
           <Button
             asChild
             size="sm"
-            className="justify-self-end rounded-none border border-[#201915] bg-[#201915] px-4 text-xs font-semibold tracking-normal text-[#fffaf2] transition-all duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-[#2c211b]"
+            className="justify-self-end rounded-lg border border-[#08251c] bg-[#08251c] px-4 text-xs font-semibold tracking-normal text-[#fbfdf7] transition-colors duration-200 hover:bg-[#123b2d]"
           >
             <a href="#start">
               Start
@@ -331,10 +316,10 @@ export default function LandingPage() {
       <section className="mx-auto max-w-[1160px] px-4 pb-20 pt-16 sm:px-6 sm:pb-24 sm:pt-24">
         <div className="mx-auto max-w-[880px] text-center">
           <SectionPill>Agent work, turned into a builder report</SectionPill>
-          <h1 className="font-display mx-auto mt-8 max-w-[860px] text-4xl font-semibold leading-[1.02] tracking-normal text-[#201915] sm:text-6xl lg:text-[70px]">
+          <h1 className="font-display mx-auto mt-8 max-w-[860px] text-4xl font-semibold leading-[1.02] tracking-normal text-[#08251c] sm:text-6xl lg:text-[70px]">
             Understand how you build with agents.
           </h1>
-          <p className="mx-auto mt-8 max-w-[720px] text-lg leading-8 text-[#65574f]">
+          <p className="mx-auto mt-8 max-w-[720px] text-lg leading-8 text-[#4f6259]">
             Atlas turns Codex, Claude Code, Cursor, Aider, and Gemini CLI runs
             into one private report of your habits, outcomes, costs, and model
             choices.
@@ -343,7 +328,7 @@ export default function LandingPage() {
             <Button
               asChild
               size="lg"
-              className="rounded-none border border-[#201915] bg-[#201915] px-8 text-[#fffaf2] transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1 hover:bg-[#2c211b]"
+              className="rounded-lg border border-[#08251c] bg-[#08251c] px-8 text-[#fbfdf7] transition-colors duration-200 hover:bg-[#123b2d]"
             >
               <a href="#start">
                 Start tracking
@@ -354,7 +339,7 @@ export default function LandingPage() {
               asChild
               variant="outline"
               size="lg"
-              className="rounded-none border-[#201915] bg-[#fffaf2] px-8 transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1 hover:bg-white"
+              className="rounded-lg border-[#08251c] bg-[#fbfdf7] px-8 transition-colors duration-200 hover:bg-white"
             >
               <a href="#signals">
                 See example report
@@ -371,7 +356,7 @@ export default function LandingPage() {
 
       <section
         id="signals"
-        className="border-y border-[#201915] bg-[#fff7eb]/78 px-4 py-20 sm:px-6 sm:py-24"
+        className="border-y border-[#08251c] bg-[#f6f8f1]/78 px-4 py-20 sm:px-6 sm:py-24"
       >
         <div className="mx-auto max-w-[1160px]">
           <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
@@ -380,28 +365,15 @@ export default function LandingPage() {
               <h2 className="font-display mt-6 text-3xl font-semibold leading-tight tracking-normal sm:text-5xl">
                 The report is the product.
               </h2>
-              <p className="mt-5 text-base leading-7 text-[#65574f]">
+              <p className="mt-5 text-base leading-7 text-[#4f6259]">
                 Fewer generic dashboard boxes. More concrete artifacts you can
                 read, share, and use to steer the next run.
               </p>
             </div>
             <div className="grid gap-5 md:grid-cols-3">
-              {insightCards.map(
-                ({ label, rotate, icon: Icon, title, body }) => (
-                  <div
-                    key={title}
-                    className={cn(
-                      "transition-transform duration-300 hover:rotate-0",
-                      rotate,
-                    )}
-                  >
-                    <div className="mb-3 font-code text-xs uppercase tracking-[0.2em] text-[#9a6543]">
-                      {label}
-                    </div>
-                    <InsightCard icon={Icon} title={title} body={body} />
-                  </div>
-                ),
-              )}
+              {insightCards.map(({ icon: Icon, title, body }) => (
+                <InsightCard key={title} icon={Icon} title={title} body={body} />
+              ))}
             </div>
           </div>
         </div>
@@ -416,15 +388,15 @@ export default function LandingPage() {
           <h2 className="font-display mt-6 text-3xl font-semibold leading-tight tracking-normal sm:text-5xl">
             Keep it private by default.
           </h2>
-          <p className="mt-5 text-base leading-7 text-[#65574f]">
+          <p className="mt-5 text-base leading-7 text-[#4f6259]">
             Personal, team, and public views stay separate.
           </p>
         </div>
-        <Card className="rounded-none border-[#201915] bg-[#fffaf2]">
+        <Card className="rounded-lg border border-[#d9e6ce] bg-[#fbfdf7] shadow-sm">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-[#201915] hover:bg-transparent">
+                <TableRow className="border-b border-[#d9e6ce] hover:bg-transparent">
                   <TableHead>Layer</TableHead>
                   <TableHead>Scope</TableHead>
                   <TableHead className="hidden sm:table-cell">Signal</TableHead>
@@ -433,11 +405,11 @@ export default function LandingPage() {
               <TableBody>
                 {benchmarkRows.map(([layer, scope, signal]) => (
                   <TableRow key={layer}>
-                    <TableCell className="font-semibold text-[#201915]">
+                    <TableCell className="font-semibold text-[#08251c]">
                       {layer}
                     </TableCell>
-                    <TableCell className="text-[#65574f]">{scope}</TableCell>
-                    <TableCell className="hidden text-[#65574f] sm:table-cell">
+                    <TableCell className="text-[#4f6259]">{scope}</TableCell>
+                    <TableCell className="hidden text-[#4f6259] sm:table-cell">
                       {signal}
                     </TableCell>
                   </TableRow>
@@ -448,23 +420,13 @@ export default function LandingPage() {
         </Card>
       </section>
 
-      <section className="relative h-[280px] overflow-hidden border-t border-[#201915] bg-[#201915] text-[#fff7eb] sm:h-[320px]">
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 select-none text-center font-display text-[clamp(6rem,24vw,21rem)] font-semibold leading-none text-[#fff7eb]/10">
+      <section className="relative flex min-h-[280px] items-center justify-center overflow-hidden border-t border-[#08251c] bg-[#08251c] px-4 py-20 text-[#f6f8f1]">
+        <Link
+          href="/"
+          className="font-display text-[clamp(5rem,18vw,15rem)] font-semibold leading-none tracking-[-0.07em]"
+        >
           Atlas.
-        </div>
-        <div className="relative z-10 flex h-full items-center justify-center">
-          <Link href="/" className="group">
-            <div className="flex h-36 w-36 items-center justify-center border border-[#f0b45f] bg-[#fffaf2] shadow-[10px_10px_0_#d9672e] transition-all duration-200 group-hover:-translate-x-1.5 group-hover:-translate-y-1.5 group-hover:shadow-[14px_14px_0_#d9672e] sm:h-44 sm:w-44">
-              <Image
-                src="/atlas-logo-minimal-mark.png"
-                alt="Atlas logo"
-                width={746}
-                height={746}
-                className="h-24 w-24 object-contain sm:h-28 sm:w-28"
-              />
-            </div>
-          </Link>
-        </div>
+        </Link>
       </section>
     </main>
   );
