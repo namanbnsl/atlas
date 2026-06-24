@@ -37,6 +37,7 @@ export const metadata: Metadata = {
 const navItems = [
   { label: "Report", href: "#report" },
   { label: "Signals", href: "#signals" },
+  { label: "Pipeline", href: "#pipeline" },
   { label: "Sharing", href: "#sharing" },
 ];
 
@@ -73,8 +74,16 @@ const insightCards = [
 
 const benchmarkRows = [
   ["Private report", "You", "habits, costs, outcomes, steering"],
+  ["Markdown insights", "Local files", "selected snippets, phrases, failure modes"],
   ["Team rollup", "Workspace", "velocity, review quality, workflow patterns"],
   ["Public benchmark", "Opt-in", "anonymous tool and workflow rankings"],
+];
+
+const pipelineRows = [
+  ["Query", "AgentsView provides stats, health, activity, search, usage, skills, and session-intelligence views."],
+  ["Compact", "Atlas keeps small evidence windows from native session messages, tool-calls, and search hits."],
+  ["Analyze", "One Atlas pass writes one insights file with evidence, case notes, and final findings."],
+  ["Write", "A single Atlas run writes both reports: numbers, and insights with evidence."],
 ];
 
 type IconCardProps = {
@@ -375,6 +384,44 @@ export default function LandingPage() {
                 <InsightCard key={title} icon={Icon} title={title} body={body} />
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="pipeline"
+        className="mx-auto max-w-[1160px] px-4 py-20 sm:px-6 sm:py-24"
+      >
+        <div className="grid gap-10 lg:grid-cols-[0.76fr_1.24fr] lg:items-start">
+          <div className="max-w-[560px]">
+            <SectionPill>Insight pipeline</SectionPill>
+            <h2 className="font-display mt-6 text-3xl font-semibold leading-tight tracking-normal sm:text-5xl">
+              Let the local agent be the historian.
+            </h2>
+            <p className="mt-5 text-base leading-7 text-[#4f6259]">
+              Atlas uses AgentsView for the cheap exhaustive work, then writes both local
+              reports in one run: numbers, and insights with evidence.
+            </p>
+          </div>
+          <div className="grid gap-4">
+            {pipelineRows.map(([label, body], index) => (
+              <div
+                key={label}
+                className="grid grid-cols-[52px_minmax(0,1fr)] gap-4 border border-[#08251c] bg-[#fbfdf7] p-5"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#08251c] bg-[#eef4e4] font-code text-sm font-semibold text-[#08251c]">
+                  {index + 1}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-display text-xl font-semibold tracking-normal text-[#08251c]">
+                    {label}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-[#4f6259]">
+                    {body}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
