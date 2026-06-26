@@ -11,6 +11,8 @@ import shlex
 import shutil
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -436,29 +438,17 @@ def activity_project_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return result
 
 
-def write_distribution(lines: list[str], title: str, section: dict[str, Any], unit: str) -> None:
-    rows = bucket_rows(section)
-    if not rows:
-        return
-    mean = section.get("scope_all", {}).get("mean") if isinstance(section, dict) else None
-    null_count = section.get("null_count") if isinstance(section, dict) else None
-    lines.extend(["", f"## {title}", "", f"- Mean: {fmt_float(mean, 2)} {unit}" if mean is not None else f"- Mean: unknown"])
-    if null_count is not None:
-        lines.append(f"- Null count: {fmt_int(null_count)}")
-    lines.extend(["", "| Bucket | Sessions |", "| --- | ---: |"])
-    for label, count in rows:
-        lines.append(f"| {label} | {count:,} |")
-
-
-
 def strip_content_fields(value: Any) -> Any:
-    banned = {"first_message", "title"}
+    """Remove known prompt/content fields before telemetry leaves the machine."""
+    banned = {"first_message", "title", "content", "text", "message", "prompt"}
     if isinstance(value, dict):
         return {key: strip_content_fields(item) for key, item in value.items() if key not in banned}
     if isinstance(value, list):
         return [strip_content_fields(item) for item in value]
     return value
-def make_report(
+
+
+def make_payload(
     resolved: ResolvedAgentsView,
     sync_summary: str,
     sessions: list[dict[str, Any]],
@@ -468,222 +458,65 @@ def make_report(
     activity: dict[str, Any],
     activity_note: str,
     stats: dict[str, Any],
-) -> str:
-    generated = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
+) -> dict[str, Any]:
     summary = summarize_sessions(sessions)
-    daily = [row for row in usage_all.get("daily", []) if isinstance(row, dict)]
-    models = build_model_rows(daily)
-    projects_sorted = project_rows(projects)
-    top_days = sorted(daily, key=lambda row: dec(row.get("totalCost")), reverse=True)[:TOP_N]
-    top_output = sorted(sessions, key=lambda row: num(row.get("total_output_tokens")), reverse=True)[:TOP_N]
-    top_context = sorted(sessions, key=lambda row: num(row.get("peak_context_tokens")), reverse=True)[:TOP_N]
-    top_retry = sorted(sessions, key=lambda row: num(row.get("tool_retry_count")), reverse=True)[:TOP_N]
-    stats_window = stats.get("window", {}) if isinstance(stats, dict) else {}
-    stats_totals = stats.get("totals", {}) if isinstance(stats, dict) else {}
-    velocity = stats.get("velocity", {}) if isinstance(stats, dict) else {}
-    tool_mix = stats.get("tool_mix", {}) if isinstance(stats, dict) else {}
-    outcomes = stats.get("outcomes", {}) if isinstance(stats, dict) else {}
-    archetypes = stats.get("archetypes", {}) if isinstance(stats, dict) else {}
-    cache = stats.get("cache_economics", {}) if isinstance(stats, dict) else {}
-    adoption = stats.get("adoption", {}) if isinstance(stats, dict) else {}
-    portfolio = stats.get("agent_portfolio", {}) if isinstance(stats, dict) else {}
-    model_mix = stats.get("model_mix", {}) if isinstance(stats, dict) else {}
-    lines = [
-        "# Atlas Agent Report",
-        "",
-        f"Generated: {generated}",
-        "",
-        "## Installation",
-        "",
-        f"- AgentsView command: `{' '.join(resolved.command)}`",
-        f"- Resolution method: {resolved.method}",
-        f"- Installed during run: {'yes' if resolved.installed else 'no'}",
-        f"- Version: {resolved.version}",
-        f"- Sync: {sync_summary}",
-        "",
-        "## Coverage",
-        "",
-        f"- Sessions: {len(sessions):,}",
-        f"- Agents: {len(summary['agents']):,}",
-        f"- Projects: {len(summary['projects']):,}",
-        f"- Machines: {len(summary['machines']):,}",
-        f"- Sessions with output-token data: {summary['with_output']:,}",
-        f"- Sessions with peak-context data: {summary['with_context']:,}",
-        f"- First seen: {summary['first_seen'].isoformat() if summary['first_seen'] else 'unknown'}",
-        f"- Last seen: {summary['last_seen'].isoformat() if summary['last_seen'] else 'unknown'}",
-        f"- Usage days with token data: {len(daily):,}",
-        f"- Activity window note: {activity_note}",
-        "",
-        "## All-Time Usage Totals",
-        "",
-        f"- Input tokens: {fmt_int(usage_all.get('totals', {}).get('inputTokens'))}",
-        f"- Output tokens: {fmt_int(usage_all.get('totals', {}).get('outputTokens'))}",
-        f"- Cache creation tokens: {fmt_int(usage_all.get('totals', {}).get('cacheCreationTokens'))}",
-        f"- Cache read tokens: {fmt_int(usage_all.get('totals', {}).get('cacheReadTokens'))}",
-        f"- Total cost: {fmt_money(usage_all.get('totals', {}).get('totalCost'))}",
-        f"- Cache savings: {fmt_money(usage_all.get('totals', {}).get('cacheSavings'))}",
-        "",
-        "## Agent Breakdown",
-        "",
-        "| Agent | Sessions | Human | Automated | Projects | Messages | User msgs | Output tokens | Peak context max | Cost | Avg health | First seen | Last seen |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
-    ]
-    for agent, _count in summary["agents"].most_common():
-        row = summary["per_agent"][agent]
-        usage = usage_by_agent.get(agent, {}).get("totals", {})
-        avg_health = row["health_sum"] / row["health_count"] if row["health_count"] else 0.0
-        lines.append(
-            f"| {agent} | {row['sessions']:,} | {row['human']:,} | {row['automated']:,} | {len(row['projects']):,} | {row['messages']:,} | {row['user_messages']:,} | {fmt_int(usage.get('outputTokens'))} | {row['peak_context']:,} | {fmt_money(usage.get('totalCost'))} | {avg_health:.1f} | {(row['first_seen'].date().isoformat() if row['first_seen'] else '')} | {(row['last_seen'].date().isoformat() if row['last_seen'] else '')} |"
-        )
-    lines.extend([
-        "",
-        "## Agent Signals",
-        "",
-        "| Agent | Retries | Tool failures | Compactions | Secret leaks | Outcomes | Health grades |",
-        "| --- | ---: | ---: | ---: | ---: | --- | --- |",
-    ])
-    for agent, _count in summary["agents"].most_common():
-        row = summary["per_agent"][agent]
-        outcome_text = ", ".join(f"{key}:{value}" for key, value in row["outcomes"].most_common())
-        grade_text = ", ".join(f"{key}:{value}" for key, value in row["grades"].most_common())
-        lines.append(
-            f"| {agent} | {row['retries']:,} | {row['tool_failures']:,} | {row['compactions']:,} | {row['secret_leaks']:,} | {outcome_text} | {grade_text} |"
-        )
-    lines.extend([
-        "",
-        "## Models",
-        "",
-        "| Model | Days | Input tokens | Output tokens | Cache create | Cache read | Cost |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
-    ])
-    for row in models:
-        lines.append(
-            f"| {row['model']} | {row['days']:,} | {row['input']:,} | {row['output']:,} | {row['cache_create']:,} | {row['cache_read']:,} | {fmt_money(row['cost'])} |"
-        )
-    lines.extend(["", "## Projects", "", "| Project | Sessions |", "| --- | ---: |"])
-    for row in projects_sorted:
-        lines.append(f"| {str(row.get('name') or 'unknown')} | {num(row.get('session_count')):,} |")
-    lines.extend([
-        "",
-        "## Stats Window (365d)",
-        "",
-        f"- Since: {stats_window.get('since', 'unknown')}",
-        f"- Until: {stats_window.get('until', 'unknown')}",
-        f"- Days: {fmt_int(stats_window.get('days'))}",
-        f"- Sessions: {fmt_int(stats_totals.get('sessions_all'))}",
-        f"- Human sessions: {fmt_int(stats_totals.get('sessions_human'))}",
-        f"- Automation sessions: {fmt_int(stats_totals.get('sessions_automation'))}",
-        f"- Messages: {fmt_int(stats_totals.get('messages_total'))}",
-        f"- User messages: {fmt_int(stats_totals.get('user_messages_total'))}",
-        "",
-        "## Stats Summary (365d)",
-        "",
-        f"- Primary archetype: {archetypes.get('primary', 'unknown')}",
-        f"- Quick sessions: {fmt_int(archetypes.get('quick'))}",
-        f"- Standard sessions: {fmt_int(archetypes.get('standard'))}",
-        f"- Deep sessions: {fmt_int(archetypes.get('deep'))}",
-        f"- Marathon sessions: {fmt_int(archetypes.get('marathon'))}",
-        f"- Turn cycle p50 seconds: {fmt_float(velocity.get('turn_cycle_seconds', {}).get('p50'), 1)}",
-        f"- Turn cycle p90 seconds: {fmt_float(velocity.get('turn_cycle_seconds', {}).get('p90'), 1)}",
-        f"- First response p50 seconds: {fmt_float(velocity.get('first_response_seconds', {}).get('p50'), 1)}",
-        f"- First response p90 seconds: {fmt_float(velocity.get('first_response_seconds', {}).get('p90'), 1)}",
-        f"- Messages per active hour: {fmt_float(velocity.get('messages_per_active_hour'), 2)}",
-        f"- Distinct skills: {fmt_int(adoption.get('distinct_skills'))}",
-        f"- Plan mode rate: {fmt_float(adoption.get('plan_mode_rate'), 4)}",
-        f"- Subagents per session: {fmt_float(adoption.get('subagents_per_session'), 2)}",
-        f"- Cache dollars spent: {fmt_money(cache.get('dollars_spent'))}",
-        f"- Cache dollars saved vs uncached: {fmt_money(cache.get('dollars_saved_vs_uncached'))}",
-        f"- Cache hit ratio overall: {fmt_float(cache.get('cache_hit_ratio', {}).get('overall'), 4)}",
-        f"- Success count: {fmt_int(outcomes.get('success'))}",
-        f"- Failure count: {fmt_int(outcomes.get('failure'))}",
-        f"- Unknown outcome count: {fmt_int(outcomes.get('unknown'))}",
-        f"- Tool retry rate: {fmt_float(outcomes.get('tool_retry_rate'), 4)}",
-        f"- Compactions per session: {fmt_float(outcomes.get('compactions_per_session'), 2)}",
-        f"- Average edit churn: {fmt_float(outcomes.get('avg_edit_churn'), 2)}",
-    ])
-    model_mix_rows = sorted((model_mix.get("by_tokens") or {}).items(), key=lambda item: num(item[1]), reverse=True)
-    if model_mix_rows:
-        lines.extend(["", "## Stats Model Tokens (365d)", "", "| Model | Tokens |", "| --- | ---: |"])
-        for name, value in model_mix_rows:
-            lines.append(f"| {name} | {num(value):,} |")
-    portfolio_rows = sorted((portfolio.get("by_sessions") or {}).items(), key=lambda item: num(item[1]), reverse=True)
-    if portfolio_rows:
-        lines.extend(["", "## Stats Agent Portfolio (365d)", "", "| Agent | Sessions | Tokens | Messages |", "| --- | ---: | ---: | ---: |"])
-        by_tokens = portfolio.get("by_tokens") or {}
-        by_messages = portfolio.get("by_messages") or {}
-        for name, value in portfolio_rows:
-            lines.append(f"| {name} | {num(value):,} | {num(by_tokens.get(name)):,} | {num(by_messages.get(name)):,} |")
-    tool_rows = sorted((tool_mix.get("by_category") or {}).items(), key=lambda item: num(item[1]), reverse=True)
-    if tool_rows:
-        lines.extend(["", "## Stats Tool Mix (365d)", "", f"- Total tool calls: {fmt_int(tool_mix.get('total_calls'))}", "", "| Category | Calls |", "| --- | ---: |"])
-        for name, value in tool_rows:
-            lines.append(f"| {name} | {num(value):,} |")
-    write_distribution(lines, "Session Duration Distribution (365d)", stats.get("distributions", {}).get("duration_minutes", {}), "minutes")
-    write_distribution(lines, "User Message Distribution (365d)", stats.get("distributions", {}).get("user_messages", {}), "messages")
-    write_distribution(lines, "Peak Context Distribution (365d)", stats.get("distributions", {}).get("peak_context_tokens", {}), "tokens")
-    write_distribution(lines, "Tools Per Turn Distribution (365d)", stats.get("distributions", {}).get("tools_per_turn", {}), "tools")
-    hourly = hourly_rollup(stats)
-    if hourly:
-        lines.extend(["", "## Hourly UTC Activity (365d)", "", "| Hour (UTC) | Sessions | User messages |", "| --- | ---: | ---: |"])
-        for row in hourly:
-            lines.append(f"| {row['hour']:02d}:00 | {row['sessions']:,} | {row['user_messages']:,} |")
-    activity_totals = activity.get("totals", {}) if isinstance(activity, dict) else {}
-    peak = activity.get("peak", {}) if isinstance(activity, dict) else {}
-    lines.extend([
-        "",
-        "## Activity Window",
-        "",
-        f"- Activity range start: {activity.get('range_start', 'unknown')}",
-        f"- Activity range end: {activity.get('effective_end', activity.get('range_end', 'unknown'))}",
-        f"- Active minutes: {fmt_minutes(activity_totals.get('active_minutes'))}",
-        f"- Idle minutes: {fmt_minutes(activity_totals.get('idle_minutes'))}",
-        f"- Agent minutes: {fmt_minutes(activity_totals.get('agent_minutes'))}",
-        f"- Interactive sessions: {fmt_int(activity_totals.get('interactive_sessions'))}",
-        f"- Automated sessions: {fmt_int(activity_totals.get('automated_sessions'))}",
-        f"- Distinct projects: {len(summary['projects']):,}",
-        f"- Distinct models: {fmt_int(activity_totals.get('distinct_models'))}",
-        f"- Output tokens: {fmt_int(activity_totals.get('output_tokens'))}",
-        f"- Cost: {fmt_money(activity_totals.get('cost'))}",
-        f"- Peak concurrent agents: {fmt_int(peak.get('agents'))}",
-        f"- Peak concurrency at: {peak.get('at', 'unknown')}",
-    ])
-    for title, rows in [
-        ("Activity By Agent", activity.get("by_agent", [])),
-        ("Activity By Model", activity.get("by_model", [])),
-        ("Activity By Project", activity.get("by_project", [])),
-    ]:
-        if not isinstance(rows, list) or not rows:
-            continue
-        display_rows = activity_project_rows(rows) if title == "Activity By Project" else rows
-        lines.extend(["", f"## {title}", "", "| Key | Agent minutes | Cost | Interactive minutes | Automated minutes |", "| --- | ---: | ---: | ---: | ---: |"])
-        for row in display_rows:
-            lines.append(
-                f"| {str(row.get('key') or 'unknown')} | {fmt_minutes(row.get('agent_minutes'))} | {fmt_money(row.get('cost'))} | {fmt_minutes(row.get('interactive_agent_minutes'))} | {fmt_minutes(row.get('automated_agent_minutes'))} |"
-            )
-    lines.extend(["", "## Top Cost Days", "", "| Date | Input tokens | Output tokens | Cost | Models |", "| --- | ---: | ---: | ---: | --- |"])
-    for row in top_days:
-        models_used = ", ".join(str(x) for x in (row.get("modelsUsed") or [])[:6])
-        lines.append(
-            f"| {str(row.get('date') or 'unknown')} | {num(row.get('inputTokens')):,} | {num(row.get('outputTokens')):,} | {fmt_money(row.get('totalCost'))} | {models_used} |"
-        )
+    telemetry = {
+        "agentsview": {
+            "command": resolved.command,
+            "resolution_method": resolved.method,
+            "installed_during_run": resolved.installed,
+            "version": resolved.version,
+            "sync_summary": sync_summary,
+        },
+        "activity_window_note": activity_note,
+        "coverage": {
+            "sessions": len(sessions),
+            "agents": len(summary["agents"]),
+            "projects": len(summary["projects"]),
+            "machines": len(summary["machines"]),
+            "sessions_with_output_token_data": summary["with_output"],
+            "sessions_with_peak_context_data": summary["with_context"],
+            "first_seen": summary["first_seen"].isoformat() if summary["first_seen"] else None,
+            "last_seen": summary["last_seen"].isoformat() if summary["last_seen"] else None,
+        },
+        "sessions": strip_content_fields(clean_sessions(sessions)),
+        "usage_all": strip_content_fields(usage_all),
+        "usage_by_agent": strip_content_fields(usage_by_agent),
+        "projects": strip_content_fields(project_rows(projects if isinstance(projects, list) else [])),
+        "activity": strip_content_fields(activity),
+        "stats_all_time": strip_content_fields(stats),
+    }
+    return {
+        "source": "agentsview",
+        "generated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+        "telemetry": telemetry,
+    }
 
-    def add_sessions(title: str, rows: list[dict[str, Any]]) -> None:
-        lines.extend(["", f"## {title}", "", "| Session | Agent | Project | Started | Ended | Output tokens | Peak context | Health | Outcome | Retries |", "| --- | --- | --- | --- | --- | ---: | ---: | --- | --- | ---: |"])
-        for row in rows:
-            lines.append(
-                f"| {short_id(str(row.get('id') or 'unknown'))} | {str(row.get('agent') or 'unknown')} | {project_value(row)} | {str(row.get('started_at') or '')} | {str(row.get('ended_at') or '')} | {num(row.get('total_output_tokens')):,} | {num(row.get('peak_context_tokens')):,} | {str(row.get('health_grade') or '')} | {str(row.get('outcome') or '')} | {num(row.get('tool_retry_count')):,} |"
-            )
 
-    add_sessions("Top Output Sessions", top_output)
-    add_sessions("Top Context Sessions", top_context)
-    add_sessions("Top Retry Sessions", top_retry)
-    return "\n".join(lines).rstrip() + "\n"
+def post_payload(api_url: str, payload: dict[str, Any]) -> dict[str, Any]:
+    data = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        api_url,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            raw = response.read().decode("utf-8")
+    except urllib.error.URLError as exc:
+        raise AtlasError(f"failed to POST Atlas payload to {api_url}: {exc}") from exc
+    try:
+        return json.loads(raw) if raw else {}
+    except json.JSONDecodeError:
+        return {"raw": raw}
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Use AgentsView CLI to generate an Atlas Markdown telemetry report.")
-    parser.add_argument("--output", default="atlas-agent-report.md", help="Markdown report path")
-    parser.add_argument("--json", dest="json_path", help="Optional JSON report path")
+    parser = argparse.ArgumentParser(description="Use AgentsView CLI to send Atlas telemetry to the API.")
+    parser.add_argument("--api-url", default="http://localhost:3000/api/ingest", help="Atlas API endpoint")
+    parser.add_argument("--print-json", action="store_true", help="Print the payload instead of posting it")
+    parser.add_argument("--json", dest="json_path", help="Optional local JSON payload path for debugging")
     parser.add_argument("--agentsview-bin", help="Explicit AgentsView command or binary path")
     parser.add_argument("--no-install", action="store_true", help="Do not attempt to install AgentsView if missing")
     return parser.parse_args(argv)
@@ -697,7 +530,7 @@ def main(argv: list[str] | None = None) -> int:
     sync_summary = " | ".join(sync_lines or sync_output[-2:]) or "Sync completed"
     sessions = fetch_sessions(resolved)
     usage_all = run_json(av(resolved, "usage", "daily", "--all", "--json", "--breakdown", "--offline"))
-    stats = run_json(av(resolved, "stats", "--format", "json", "--since", "365d"))
+    stats = run_json(av(resolved, "stats", "--format", "json"))
     agents = sorted({str(item.get("agent") or "unknown") for item in sessions})
     usage_by_agent = {
         agent: run_json(av(resolved, "usage", "daily", "--agent", agent, "--all", "--json", "--breakdown", "--offline"))
@@ -705,7 +538,7 @@ def main(argv: list[str] | None = None) -> int:
     }
     projects = run_json(av(resolved, "projects", "--json"))
     activity, activity_note = fetch_activity(resolved, sessions)
-    markdown = make_report(
+    payload = make_payload(
         resolved,
         sync_summary,
         sessions,
@@ -716,29 +549,15 @@ def main(argv: list[str] | None = None) -> int:
         activity_note,
         stats if isinstance(stats, dict) else {},
     )
-    output_path = Path(args.output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(markdown, encoding="utf-8")
     if args.json_path:
-        payload = {
-            "generated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
-            "agentsview": {
-                "command": resolved.command,
-                "resolution_method": resolved.method,
-                "installed_during_run": resolved.installed,
-                "version": resolved.version,
-                "sync_summary": sync_summary,},
-            "activity_window_note": activity_note,
-            "sessions": strip_content_fields(clean_sessions(sessions)),
-            "usage_all": strip_content_fields(usage_all),
-            "usage_by_agent": strip_content_fields(usage_by_agent),
-            "projects": strip_content_fields(project_rows(projects if isinstance(projects, list) else [])),
-            "activity": strip_content_fields(activity),
-            "stats_365d": strip_content_fields(stats),
-        }
         json_path = Path(args.json_path)
         json_path.parent.mkdir(parents=True, exist_ok=True)
         json_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    if args.print_json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+        return 0
+    response = post_payload(args.api_url, payload)
+    print(json.dumps(response, indent=2, sort_keys=True))
     return 0
 
 
@@ -748,5 +567,3 @@ if __name__ == "__main__":
     except AtlasError as exc:
         print(f"Atlas error: {exc}", file=sys.stderr)
         raise SystemExit(1)
-
-

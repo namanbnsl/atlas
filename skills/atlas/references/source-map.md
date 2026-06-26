@@ -17,12 +17,12 @@ On Windows without AgentsView, prefer `--agentsview-bin`, `uvx agentsview`, or m
 
 ## Content-Free Telemetry Commands
 
-The telemetry report may use:
+The all-time telemetry payload may use:
 
 - `agentsview version`
 - `agentsview sync`
 - `agentsview session list --json --limit 500 --include-one-shot --include-automated --include-children`
-- `agentsview stats --format json --since 365d`
+- `agentsview stats --format json`
 - `agentsview usage daily --all --json --breakdown --offline`
 - `agentsview usage daily --agent <name> --all --json --breakdown --offline`
 - `agentsview projects --json`
@@ -58,16 +58,9 @@ Atlas canonicalizes project names:
 
 ## Behavioral Insight Rules
 
-Default report artifacts, produced together in one Atlas run:
+Default Atlas runs send one structured JSON payload to the API. Do not create Markdown report artifacts unless the user explicitly asks for export files.
 
-1. `atlas-agent-report.md` - content-free numbers/telemetry report.
-2. `atlas-developer-insights.md` - behavioral insights plus evidence.
-
-Do not require a second prompt to generate developer insights. Do not create separate `atlas-insight-evidence.md` or `atlas-insight-case-notes.md` files. Put evidence ledger, case notes, candidate review, and final insights inside `atlas-developer-insights.md`.
-
-Telemetry-only is an exception: if the user explicitly asks for telemetry-only, numbers-only, content-free, or no prompt content, produce only `atlas-agent-report.md`.
-
-Final insights must cite Q-labels and exact quotes from the Evidence Ledger section. Remove claims that cannot be traced to a quote.
+Behavioral insight runs should include an `insights` object with evidence, case notes, candidate review, final insights, rules for future agents, and an evidence index. Final insights must cite Q-labels and exact quotes from the evidence array. Remove claims that cannot be traced to a quote.
 
 A useful insight should identify a hidden mechanism, not a visible metric. Prefer latent patterns, contradictions, silent assumptions, taste signatures, product-model drift, negative preference maps, and prompt leverage.
 
@@ -82,5 +75,5 @@ Reject:
 ## Window Notes
 
 - `usage daily --all` can cover all synced history.
-- `stats` can run over stable windows such as `365d`.
-- `activity report` may be clipped to a one-year window by upstream limits.
+- `stats should be run without `--since` for the default all-time Atlas payload.
+- `activity report` may be clipped by upstream limits; sessions, usage daily with `--all`, projects, and unwindowed stats are the all-time sources.

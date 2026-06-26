@@ -1,39 +1,38 @@
 ---
-name: atlas-agent-telemetry
-description: Generate Atlas coding-agent telemetry and behavioral insight reports from local AgentsView data. Use for Atlas reports, agent analytics, costs/tokens, health/outcomes, activity, prompt patterns, failure modes, success patterns, common phrases, and developer-agent workflow insights across Codex, Claude Code, Cursor, OpenCode, Antigravity, Amp, Gemini CLI, and related coding agents.
+name: atlas-agent-info
+description: Send Atlas coding-agent telemetry and behavioral insights from local AgentsView data to the Atlas API. Use for Atlas agent analytics, costs/tokens, health/outcomes, activity, prompt patterns, failure modes, success patterns, common phrases, and developer-agent workflow insights across Codex, Claude Code, Cursor, OpenCode, Antigravity, Amp, Gemini CLI, and related coding agents.
 ---
 
 # Atlas Agent Telemetry
 
 Atlas uses AgentsView as the data layer. Do not parse raw agent transcript files yourself. Use AgentsView commands/package surfaces for discovery, stats, search, health, usage, tool calls, and bounded message reads.
 
-Choose one workflow:
+Send results to the Atlas API as structured JSON. Do not create Markdown reports.
 
-- **Telemetry:** content-free metrics and inventory. No prompt text.
-- **Behavioral insights:** opt-in local Markdown files using compact quoted session text.
+Default local endpoint:
+
+```text
+http://localhost:3000/api/ingest
+```
 
 ## Telemetry Workflow
 
-Run from the workspace where the report should be written:
+Run from the workspace where Atlas should collect data:
 
 ```bash
 python <skill-dir>/scripts/analyze_agent_sessions.py \
-  --output atlas-agent-report.md \
+  --api-url http://localhost:3000/api/ingest
 ```
 
-Read `atlas-agent-report.md` before answering. Summarize notable telemetry and mention saved paths. Do not infer developer quality from content-free metrics.
+The script syncs AgentsView, collects all-time content-free telemetry from all synced sessions, and POSTs one JSON payload to the API. Do not infer developer quality from content-free metrics.
 
 ## Behavioral Insight Workflow
 
 The goal is not another report full of numbers. The goal is to discover non-obvious, operational truths that change how future agents should work with this developer.
 
-Run one **Atlas Insight Pass** and create one behavioral file:
+Run one **Atlas Insight Pass** across all synced history and send behavioral insight data to the API in the same payload shape. The payload should include compact exact quote evidence, compact case notes, candidate review, and final surviving insights.
 
-- `atlas-developer-insights.md` - exact quote evidence, compact case notes, candidate review, and final surviving insights.
-
-Together with the telemetry workflow, Atlas should produce only two top-level report files: `atlas-agent-report.md` for numbers and `atlas-developer-insights.md` for insights plus evidence. Do not create separate `atlas-insight-evidence.md` or `atlas-insight-case-notes.md` files.
-
-Do not ask the user for a second synthesis prompt. In chat, only say which files were written and name the 2-3 sharpest findings.
+Do not ask the user for a second synthesis prompt. In chat, only say whether the API accepted the payload and name the 2-3 sharpest findings.
 
 ### Gather Evidence With AgentsView
 
@@ -46,7 +45,7 @@ agentsview health --json --limit 50
 agentsview projects --json
 ```
 
-Find contrasting cases rather than ranked winners:
+Find contrasting cases across all synced history rather than ranked winners:
 
 ```bash
 agentsview session list --json --include-one-shot --include-automated --include-children --sort user-messages:desc --limit 20
@@ -82,23 +81,43 @@ agentsview session messages <session-id> --limit 16 --direction desc --json
 agentsview session messages <session-id> --from <ordinal-minus-4> --limit 10 --direction asc --json
 ```
 
-## Required Files
+## API Payload Shape
 
-### `atlas-insight-evidence.md`
+Send one JSON object:
+
+```json
+{
+  "source": "agentsview",
+  "generated_at": "2026-06-26T00:00:00+00:00",
+  "telemetry": {},
+  "insights": {
+    "evidence": [],
+    "case_notes": [],
+    "candidate_review": [],
+    "read_this_first": [],
+    "final_insights": [],
+    "rules_for_future_agents": []
+  }
+}
+```
+
+Telemetry payloads may omit `insights`. Behavioral runs should include both telemetry and insights.
+
+### Evidence
 
 Quote ledger. Every final insight must trace back here.
 
-```markdown
-# Atlas Insight Evidence
-
-## Q1 - <short label>
-
-Session: <session id>
-Role/ordinal: <role, ordinal if available>
-Actual text: "<short exact quote>"
-Context: <what happened before/after>
-Potential signal: <tentative meaning>
-Use: yes | no | uncertain
+```json
+{
+  "label": "Q1",
+  "session_id": "<session id>",
+  "role": "<role>",
+  "ordinal": 12,
+  "actual_text": "<short exact quote>",
+  "context": "<what happened before/after>",
+  "potential_signal": "<tentative meaning>",
+  "use": "yes"
+}
 ```
 
 Rules:
@@ -108,59 +127,53 @@ Rules:
 - Include counterexample quotes, not just confirming quotes.
 - Discard self-referential hits from Atlas docs, prior reports, command examples, or prompt templates.
 
-### `atlas-insight-case-notes.md`
+### Case Notes
 
 Case notes are working notes, not polished insight prose.
 
-```markdown
-## Case: <session id> - <short label>
-
-User wanted: <one sentence>
-Agent did: <one sentence>
-Turning point: <correction, approval, rejection, or redirect>
-Outcome: <what happened, not a metric dump>
-Tentative lesson: <may be wrong>
-Evidence: Q1, Q4 - "<short quote if useful>"
+```json
+{
+  "session_id": "<session id>",
+  "label": "<short label>",
+  "user_wanted": "<one sentence>",
+  "agent_did": "<one sentence>",
+  "turning_point": "<correction, approval, rejection, or redirect>",
+  "outcome": "<what happened, not a metric dump>",
+  "tentative_lesson": "<may be wrong>",
+  "evidence": ["Q1", "Q4"]
+}
 ```
 
 Write at least 8 case notes if enough useful sessions exist. Include successes, failures, corrections, and counterexamples.
 
-### `atlas-developer-insights.md`
+### Final Insights
 
-This is the final artifact. It must include candidate review and final insights.
+Final insight data must include candidate review and final insights.
 
-```markdown
-# Atlas Developer Insights
-
-## Candidate Review
-
-- Status: keep | reject | uncertain
-- Claim:
-- Evidence: Q-labels plus exact quotes
-- Counterevidence or missing evidence:
-- Future-agent implication:
-
-## Read This First
-
-3-5 bullets from kept candidates only. No counts.
-
-## Final Insights
-
-For each insight:
-
-- Hidden pattern:
-- Why it matters:
-- Evidence: Q-labels plus exact quotes
-- Agent rule:
-- Prompt leverage:
-
-## Rules For Future Agents
-
-Specific do/don't rules.
-
-## Evidence Index
-
-Session ids, quote labels, and one-line case summaries.
+```json
+{
+  "candidate_review": [
+    {
+      "status": "keep",
+      "claim": "<claim>",
+      "evidence": ["Q1"],
+      "counterevidence_or_missing_evidence": "<text>",
+      "future_agent_implication": "<text>"
+    }
+  ],
+  "read_this_first": ["<3-5 bullets from kept candidates only>"],
+  "final_insights": [
+    {
+      "hidden_pattern": "<text>",
+      "why_it_matters": "<text>",
+      "evidence": ["Q1"],
+      "agent_rule": "<text>",
+      "prompt_leverage": "<text>"
+    }
+  ],
+  "rules_for_future_agents": ["<specific do/don't rule>"],
+  "evidence_index": []
+}
 ```
 
 Include 3-7 final insights. Fewer sharp insights are better than many safe observations.
@@ -169,7 +182,7 @@ Include 3-7 final insights. Fewer sharp insights are better than many safe obser
 
 A final insight must pass these tests:
 
-- **Evidence:** cites exact quotes from the Evidence Ledger section of `atlas-developer-insights.md`.
+- **Evidence:** cites exact quotes from the evidence array.
 - **Non-obviousness:** not just a visible habit or metric summary.
 - **Mechanism:** explains user behavior -> agent interpretation -> consequence.
 - **Leverage:** changes the first 10 minutes of a future agent run.
@@ -198,12 +211,6 @@ Prioritize hidden patterns:
 - delegation sweet spots and traps
 - recovery style when the agent is wrong
 - prompt leverage that would have prevented an observed failure
-
-## Safety
-
-`atlas-agent-report.md` is content-free. `atlas-developer-insights.md` may include compact quotes because it is part of the default combined Atlas run. Keep behavioral artifacts local by default. Do not paste raw snippets into chat unless the user asks. Do not create extra report files beyond `atlas-agent-report.md` and `atlas-developer-insights.md` unless the user explicitly asks.
-
-If the user says telemetry-only, numbers-only, content-free, or no prompt content, produce only `atlas-agent-report.md`.
 
 ## Reference
 
