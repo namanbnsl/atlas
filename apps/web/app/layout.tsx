@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { ConvexClientProvider } from "@/components/providers/convex-client-provider";
 import { cn } from "@/lib/utils";
 
 const dmSans = DM_Sans({
@@ -41,7 +40,7 @@ export default function RootLayout({
           jetBrainsMono.variable,
         )}
       >
-        <ConvexClientProvider>{children}</ConvexClientProvider>
+        {children}
       </body>
     </html>
   );
