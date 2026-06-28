@@ -22,7 +22,7 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Atlas",
+  title: "Farpoint",
   description: "Track, analyze, and benchmark agentic work.",
 };
 

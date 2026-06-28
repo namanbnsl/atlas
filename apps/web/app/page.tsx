@@ -29,9 +29,9 @@ import {
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Atlas | Builder reports for agent work",
+  title: "Farpoint | Builder reports for agent work",
   description:
-    "Atlas turns AI coding agent runs into a private builder report, workgraph insights, and opt-in benchmarks.",
+    "Farpoint turns AI coding agent runs into a private builder report, workgraph insights, and opt-in benchmarks.",
 };
 
 const navItems = [
@@ -67,23 +67,39 @@ const insightCards = [
   },
   {
     title: "Different agents, different lanes.",
-    body: "Atlas separates UI edits, architecture reviews, and tight patch loops so tool choice becomes concrete.",
+    body: "Farpoint separates UI edits, architecture reviews, and tight patch loops so tool choice becomes concrete.",
     icon: Bot,
   },
 ];
 
 const benchmarkRows = [
   ["Private report", "You", "habits, costs, outcomes, steering"],
-  ["Markdown insights", "Local files", "selected snippets, phrases, failure modes"],
+  [
+    "Markdown insights",
+    "Local files",
+    "selected snippets, phrases, failure modes",
+  ],
   ["Team rollup", "Workspace", "velocity, review quality, workflow patterns"],
   ["Public benchmark", "Opt-in", "anonymous tool and workflow rankings"],
 ];
 
 const pipelineRows = [
-  ["Query", "AgentsView provides stats, health, activity, search, usage, skills, and session-intelligence views."],
-  ["Compact", "Atlas keeps small evidence windows from native session messages, tool-calls, and search hits."],
-  ["Analyze", "One Atlas pass writes one insights file with evidence, case notes, and final findings."],
-  ["Write", "A single Atlas run writes both reports: numbers, and insights with evidence."],
+  [
+    "Query",
+    "AgentsView provides stats, health, activity, search, usage, skills, and session-intelligence views.",
+  ],
+  [
+    "Compact",
+    "Farpoint keeps small evidence windows from native session messages, tool-calls, and search hits.",
+  ],
+  [
+    "Analyze",
+    "One Farpoint pass writes one insights file with evidence, case notes, and final findings.",
+  ],
+  [
+    "Write",
+    "A single Farpoint run writes both reports: numbers, and insights with evidence.",
+  ],
 ];
 
 type IconCardProps = {
@@ -92,13 +108,13 @@ type IconCardProps = {
   body: string;
 };
 
-function AtlasWordmark({ light = false }: { light?: boolean }) {
+function FarpointWordmark({ light = false }: { light?: boolean }) {
   return (
-    <div className="group flex items-center gap-2.5" aria-label="Atlas">
+    <div className="group flex items-center gap-2.5" aria-label="Farpoint">
       <div className="flex h-12 w-12 items-center justify-center bg-transparent">
         <Image
-          src="/atlas-logo-minimal-mark.png"
-          alt="Atlas logo"
+          src="/farpoint-logo-minimal-mark.png"
+          alt="Farpoint logo"
           width={796}
           height={796}
           className="h-12 w-12 object-contain"
@@ -111,7 +127,7 @@ function AtlasWordmark({ light = false }: { light?: boolean }) {
           light ? "text-[#f6f8f1] group-hover:text-white" : "text-[#08251c] ",
         )}
       >
-        Atlas
+        Farpoint
       </span>
     </div>
   );
@@ -184,7 +200,7 @@ function BuilderReport() {
             <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-start">
               <div className="min-w-0">
                 <p className="font-code text-xs uppercase tracking-[0.22em] text-[#6b7a70]">
-                  atlas.dev/naman
+                  farpoint.dev/naman
                 </p>
                 <h2 className="font-display mt-4 text-3xl font-semibold leading-tight tracking-normal text-[#08251c] sm:text-4xl">
                   Builder habits report
@@ -296,7 +312,7 @@ export default function LandingPage() {
           aria-label="Main navigation"
         >
           <Link href="/" className="justify-self-start">
-            <AtlasWordmark />
+            <FarpointWordmark />
           </Link>
           <div className="hidden items-center gap-7 justify-self-center md:flex">
             {navItems.map((item) => (
@@ -329,9 +345,9 @@ export default function LandingPage() {
             Understand how you build with agents.
           </h1>
           <p className="mx-auto mt-8 max-w-[720px] text-lg leading-8 text-[#4f6259]">
-            Atlas turns Codex, Claude Code, Cursor, Aider, and Gemini CLI runs
-            into one private report of your habits, outcomes, costs, and model
-            choices.
+            Farpoint turns Codex, Claude Code, Cursor, Aider, and Gemini CLI
+            runs into one private report of your habits, outcomes, costs, and
+            model choices.
           </p>
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row sm:items-center">
             <Button
@@ -370,7 +386,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-[1160px]">
           <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
             <div className="max-w-[560px]">
-              <SectionPill>What Atlas notices</SectionPill>
+              <SectionPill>What Farpoint notices</SectionPill>
               <h2 className="font-display mt-6 text-3xl font-semibold leading-tight tracking-normal sm:text-5xl">
                 The report is the product.
               </h2>
@@ -381,7 +397,12 @@ export default function LandingPage() {
             </div>
             <div className="grid gap-5 md:grid-cols-3">
               {insightCards.map(({ icon: Icon, title, body }) => (
-                <InsightCard key={title} icon={Icon} title={title} body={body} />
+                <InsightCard
+                  key={title}
+                  icon={Icon}
+                  title={title}
+                  body={body}
+                />
               ))}
             </div>
           </div>
@@ -399,8 +420,9 @@ export default function LandingPage() {
               Let the local agent be the historian.
             </h2>
             <p className="mt-5 text-base leading-7 text-[#4f6259]">
-              Atlas uses AgentsView for the cheap exhaustive work, then writes both local
-              reports in one run: numbers, and insights with evidence.
+              Farpoint uses AgentsView for the cheap exhaustive work, then
+              writes both local reports in one run: numbers, and insights with
+              evidence.
             </p>
           </div>
           <div className="grid gap-4">
@@ -472,7 +494,7 @@ export default function LandingPage() {
           href="/"
           className="font-display text-[clamp(5rem,18vw,15rem)] font-semibold leading-none tracking-[-0.07em]"
         >
-          Atlas.
+          Farpoint.
         </Link>
       </section>
     </main>

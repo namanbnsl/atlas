@@ -41,7 +41,9 @@ function asNumber(value: unknown) {
 }
 
 function stringList(value: unknown) {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
 function countValue(value: unknown) {
@@ -65,7 +67,10 @@ function summarizePayload(payload: IngestPayload) {
   }
   for (const session of sessions) {
     if (!isObject(session)) continue;
-    const agent = typeof session.agent === "string" && session.agent ? session.agent : "unknown";
+    const agent =
+      typeof session.agent === "string" && session.agent
+        ? session.agent
+        : "unknown";
     agentCounts.set(agent, (agentCounts.get(agent) ?? 0) + 1);
   }
 
@@ -75,13 +80,21 @@ function summarizePayload(payload: IngestPayload) {
     .map(([agent, session_count]) => ({ agent, session_count }));
 
   const topProjectsFromArray = projects.map((project) => ({
-    name: typeof project.name === "string" && project.name ? project.name : "unknown",
+    name:
+      typeof project.name === "string" && project.name
+        ? project.name
+        : "unknown",
     session_count: asNumber(project.session_count),
   }));
   const topProjectsFromCoverage = isObject(coverage.top_projects)
-    ? Object.entries(coverage.top_projects).map(([name, count]) => ({ name, session_count: asNumber(count) }))
+    ? Object.entries(coverage.top_projects).map(([name, count]) => ({
+        name,
+        session_count: asNumber(count),
+      }))
     : [];
-  const topProjects = (topProjectsFromArray.length ? topProjectsFromArray : topProjectsFromCoverage)
+  const topProjects = (
+    topProjectsFromArray.length ? topProjectsFromArray : topProjectsFromCoverage
+  )
     .sort((a, b) => b.session_count - a.session_count)
     .slice(0, 8);
 
@@ -117,7 +130,9 @@ function summarizePayload(payload: IngestPayload) {
     top_agents: topAgents,
     top_projects: topProjects,
     insight_counts: {
-      final_insights: Array.isArray(insights.final_insights) ? insights.final_insights.length : 0,
+      final_insights: Array.isArray(insights.final_insights)
+        ? insights.final_insights.length
+        : 0,
       rules_for_future_agents: Array.isArray(insights.rules_for_future_agents)
         ? insights.rules_for_future_agents.length
         : 0,
@@ -148,11 +163,17 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ ok: false, error: "Expected a JSON body." }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "Expected a JSON body." },
+      { status: 400 },
+    );
   }
 
   if (!isObject(body)) {
-    return NextResponse.json({ ok: false, error: "Payload must be a JSON object." }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "Payload must be a JSON object." },
+      { status: 400 },
+    );
   }
 
   if (!isObject(body.telemetry) && !isObject(body.insights)) {
@@ -165,7 +186,9 @@ export async function POST(request: NextRequest) {
   const payload: IngestPayload = {
     source: typeof body.source === "string" ? body.source : "agentsview",
     generated_at:
-      typeof body.generated_at === "string" ? body.generated_at : new Date().toISOString(),
+      typeof body.generated_at === "string"
+        ? body.generated_at
+        : new Date().toISOString(),
     telemetry: isObject(body.telemetry) ? body.telemetry : undefined,
     insights: isObject(body.insights) ? body.insights : undefined,
   };
@@ -182,7 +205,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     ok: true,
-    message: "Atlas payload ingested.",
+    message: "Farpoint payload ingested.",
     endpoint: "/api/ingest",
     id: stored.id,
     received_at: stored.received_at,

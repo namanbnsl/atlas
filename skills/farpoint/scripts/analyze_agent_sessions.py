@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Atlas AgentsView wrapper."""
+"""Farpoint AgentsView wrapper."""
 from __future__ import annotations
 
 import argparse
@@ -31,7 +31,7 @@ class ResolvedAgentsView:
     version: str
 
 
-class AtlasError(RuntimeError):
+class FarpointError(RuntimeError):
     pass
 
 
@@ -39,7 +39,7 @@ def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess[str]:
     proc = subprocess.run(cmd, capture_output=True, text=True, errors="replace")
     if check and proc.returncode != 0:
         detail = proc.stderr.strip() or proc.stdout.strip() or f"exit {proc.returncode}"
-        raise AtlasError(f"command failed: {' '.join(cmd)}\n{detail}")
+        raise FarpointError(f"command failed: {' '.join(cmd)}\n{detail}")
     return proc
 
 
@@ -48,7 +48,7 @@ def run_json(cmd: list[str]) -> Any:
     try:
         return json.loads(proc.stdout)
     except json.JSONDecodeError as exc:
-        raise AtlasError(f"invalid JSON from {' '.join(cmd)}") from exc
+        raise FarpointError(f"invalid JSON from {' '.join(cmd)}") from exc
 
 
 def parse_iso(value: Any) -> dt.datetime | None:
@@ -122,7 +122,7 @@ def version_for(command: list[str]) -> str:
 
 
 def resolve_agentsview(explicit: str | None, allow_install: bool) -> ResolvedAgentsView:
-    env_override = os.environ.get("ATLAS_AGENTSVIEW_BIN")
+    env_override = os.environ.get("FARPOINT_AGENTSVIEW_BIN")
     if explicit:
         cmd = shlex.split(explicit)
         return ResolvedAgentsView(cmd, "explicit", False, version_for(cmd))
@@ -138,7 +138,7 @@ def resolve_agentsview(explicit: str | None, allow_install: bool) -> ResolvedAge
         cmd = [uvx, "agentsview"]
         return ResolvedAgentsView(cmd, "uvx", False, version_for(cmd))
     if not allow_install:
-        raise AtlasError(
+        raise FarpointError(
             "AgentsView is unavailable. Try `uvx agentsview`, `python -m pip install agentsview`, or `curl -fsSL https://agentsview.io/install.sh | bash`."
         )
     if run([sys.executable, "-m", "pip", "install", "agentsview"], check=False).returncode == 0:
@@ -153,7 +153,7 @@ def resolve_agentsview(explicit: str | None, allow_install: bool) -> ResolvedAge
             if direct:
                 cmd = [direct]
                 return ResolvedAgentsView(cmd, "curl", True, version_for(cmd))
-    raise AtlasError("Unable to resolve or install AgentsView.")
+    raise FarpointError("Unable to resolve or install AgentsView.")
 
 
 def av(resolved: ResolvedAgentsView, *args: str) -> list[str]:
@@ -505,7 +505,7 @@ def post_payload(api_url: str, payload: dict[str, Any]) -> dict[str, Any]:
         with urllib.request.urlopen(request, timeout=30) as response:
             raw = response.read().decode("utf-8")
     except urllib.error.URLError as exc:
-        raise AtlasError(f"failed to POST Atlas payload to {api_url}: {exc}") from exc
+        raise FarpointError(f"failed to POST Farpoint payload to {api_url}: {exc}") from exc
     try:
         return json.loads(raw) if raw else {}
     except json.JSONDecodeError:
@@ -513,8 +513,8 @@ def post_payload(api_url: str, payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Use AgentsView CLI to send Atlas telemetry to the API.")
-    parser.add_argument("--api-url", default="http://localhost:3000/api/ingest", help="Atlas API endpoint")
+    parser = argparse.ArgumentParser(description="Use AgentsView CLI to send Farpoint telemetry to the API.")
+    parser.add_argument("--api-url", default="http://localhost:3000/api/ingest", help="Farpoint API endpoint")
     parser.add_argument("--print-json", action="store_true", help="Print the payload instead of posting it")
     parser.add_argument("--json", dest="json_path", help="Optional local JSON payload path for debugging")
     parser.add_argument("--agentsview-bin", help="Explicit AgentsView command or binary path")
@@ -564,6 +564,6 @@ def main(argv: list[str] | None = None) -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except AtlasError as exc:
-        print(f"Atlas error: {exc}", file=sys.stderr)
+    except FarpointError as exc:
+        print(f"Farpoint error: {exc}", file=sys.stderr)
         raise SystemExit(1)

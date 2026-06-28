@@ -1,13 +1,13 @@
-# Atlas AgentsView Source Map
+# Farpoint AgentsView Source Map
 
-Atlas wraps AgentsView. Use this file for details; keep `SKILL.md` as the short operator guide.
+Farpoint wraps AgentsView. Use this file for details; keep `SKILL.md` as the short operator guide.
 
 ## Resolution Order
 
 The telemetry wrapper resolves AgentsView in this order:
 
 1. `--agentsview-bin`
-2. `ATLAS_AGENTSVIEW_BIN`
+2. `FARPOINT_AGENTSVIEW_BIN`
 3. `agentsview` on `PATH`
 4. `uvx agentsview`
 5. `python -m pip install agentsview`
@@ -49,16 +49,16 @@ Search snippets are not evidence. Fetch surrounding messages before making claim
 
 ## Project Normalization
 
-Atlas canonicalizes project names:
+Farpoint canonicalizes project names:
 
-- `/home/namanb/code/atlas` -> `atlas`
-- `C:\Users\name\code\atlas` -> `atlas`
-- `\\wsl.localhost\Ubuntu\home\name\code\atlas` -> `atlas`
+- `/home/namanb/code/farpoint` -> `farpoint`
+- `C:\Users\name\code\farpoint` -> `farpoint`
+- `\\wsl.localhost\Ubuntu\home\name\code\farpoint` -> `farpoint`
 - empty, `none`, `null`, and missing values -> `unknown`
 
 ## Behavioral Insight Rules
 
-Default Atlas runs send one structured JSON payload to the API. Do not create Markdown report artifacts unless the user explicitly asks for export files.
+Default Farpoint runs send one structured JSON payload to the API. Do not create Markdown report artifacts unless the user explicitly asks for export files.
 
 Behavioral insight runs should include an `insights` object with evidence, case notes, candidate review, final insights, rules for future agents, and an evidence index. Final insights must cite Q-labels and exact quotes from the evidence array. Remove claims that cannot be traced to a quote.
 
@@ -68,12 +68,12 @@ Reject:
 
 - metric summaries
 - obvious personality summaries
-- self-referential evidence from Atlas docs or prior reports
+- self-referential evidence from Farpoint docs or prior reports
 - claims where evidence text is identical to the conclusion
 - generic advice such as "ask clarifying questions"
 
 ## Window Notes
 
 - `usage daily --all` can cover all synced history.
-- `stats should be run without `--since` for the default all-time Atlas payload.
+- `stats should be run without `--since` for the default all-time Farpoint payload.
 - `activity report` may be clipped by upstream limits; sessions, usage daily with `--all`, projects, and unwindowed stats are the all-time sources.

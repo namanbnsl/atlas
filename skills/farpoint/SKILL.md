@@ -1,13 +1,13 @@
 ---
-name: atlas-agent-info
-description: Send Atlas coding-agent telemetry and behavioral insights from local AgentsView data to the Atlas API. Use for Atlas agent analytics, costs/tokens, health/outcomes, activity, prompt patterns, failure modes, success patterns, common phrases, and developer-agent workflow insights across Codex, Claude Code, Cursor, OpenCode, Antigravity, Amp, Gemini CLI, and related coding agents.
+name: farpoint-agent-info
+description: Send Farpoint coding-agent telemetry and behavioral insights from local AgentsView data to the Farpoint API. Use for Farpoint agent analytics, costs/tokens, health/outcomes, activity, prompt patterns, failure modes, success patterns, common phrases, and developer-agent workflow insights across Codex, Claude Code, Cursor, OpenCode, Antigravity, Amp, Gemini CLI, and related coding agents.
 ---
 
-# Atlas Agent Telemetry
+# Farpoint Agent Telemetry
 
-Atlas uses AgentsView as the data layer. Do not parse raw agent transcript files yourself. Use AgentsView commands/package surfaces for discovery, stats, search, health, usage, tool calls, and bounded message reads.
+Farpoint uses AgentsView as the data layer. Do not parse raw agent transcript files yourself. Use AgentsView commands/package surfaces for discovery, stats, search, health, usage, tool calls, and bounded message reads.
 
-Send results to the Atlas API as structured JSON. Do not create Markdown reports.
+Send results to the Farpoint API as structured JSON. Do not create Markdown reports.
 
 Default local endpoint:
 
@@ -17,7 +17,7 @@ http://localhost:3000/api/ingest
 
 ## Telemetry Workflow
 
-Run from the workspace where Atlas should collect data:
+Run from the workspace where Farpoint should collect data:
 
 ```bash
 python <skill-dir>/scripts/analyze_agent_sessions.py \
@@ -30,7 +30,7 @@ The script syncs AgentsView, collects all-time content-free telemetry from all s
 
 The goal is not another report full of numbers. The goal is to discover non-obvious, operational truths that change how future agents should work with this developer.
 
-Run one **Atlas Insight Pass** across all synced history and send behavioral insight data to the API in the same payload shape. The payload should include compact exact quote evidence, compact case notes, candidate review, and final surviving insights.
+Run one **Farpoint Insight Pass** across all synced history and send behavioral insight data to the API in the same payload shape. The payload should include compact exact quote evidence, compact case notes, candidate review, and final surviving insights.
 
 Do not ask the user for a second synthesis prompt. In chat, only say whether the API accepted the payload and name the 2-3 sharpest findings.
 
@@ -125,7 +125,7 @@ Rules:
 - Use exact quoted session text. Paraphrase is not enough.
 - Keep quotes short and necessary.
 - Include counterexample quotes, not just confirming quotes.
-- Discard self-referential hits from Atlas docs, prior reports, command examples, or prompt templates.
+- Discard self-referential hits from Farpoint docs, prior reports, command examples, or prompt templates.
 
 ### Case Notes
 
